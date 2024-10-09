@@ -14,7 +14,7 @@ be a Logfire write token.
 In the simplest case, you need to initialize the logfire.
 
 ```go
-closer, err := logfire.Initialize(context.Background(), logfire.WithServiceName("test-my-service"))
+closer, err := logfire.Initialize(context.Background())
 if err != nil {
     log.Fatalf("Failed to initialize logfire: %v", err)
 }
