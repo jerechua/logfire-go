@@ -28,6 +28,7 @@ const (
 var (
 	globalTracer      oteltrace.Tracer
 	globalServiceName string
+	globalLogger      *SpanLogger
 )
 
 // config is the config that is required to initialize the logfire logger.
@@ -126,6 +127,12 @@ func Initialize(ctx context.Context, opts ...Option) (func(), error) {
 	otel.SetTracerProvider(provider)
 
 	globalTracer = otel.Tracer(logfireTracerName)
+	globalLogger = &SpanLogger{
+		spanCtx: context.Background(),
+		// This is unused for the global logger.  You should not
+		// attempt to close the global logger, or it will panic!
+		span: nil,
+	}
 
 	return func() {
 		if err := provider.Shutdown(ctx); err != nil {
@@ -155,27 +162,27 @@ func Tracer() oteltrace.Tracer {
 }
 
 func Trace(msg string) {
-	sendLog(context.Background(), msg, otellog.SeverityTrace)
+	globalLogger.Trace(msg)
 }
 
 func Debug(msg string) {
-	sendLog(context.Background(), msg, otellog.SeverityDebug)
+	globalLogger.Debug(msg)
 }
 
 func Info(msg string) {
-	sendLog(context.Background(), msg, otellog.SeverityInfo)
+	globalLogger.Info(msg)
 }
 
 func Warn(msg string) {
-	sendLog(context.Background(), msg, otellog.SeverityWarn)
+	globalLogger.Warn(msg)
 }
 
 func Error(msg string) {
-	sendLog(context.Background(), msg, otellog.SeverityError)
+	globalLogger.Error(msg)
 }
 
 func Fatal(msg string) {
-	sendLog(context.Background(), msg, otellog.SeverityFatal)
+	globalLogger.Fatal(msg)
 }
 
 type SpanLogger struct {
