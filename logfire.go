@@ -73,7 +73,7 @@ func newConfigWithDefaults(options ...Option) *Config {
 }
 
 // Initialize initializes the logfire logger.  This must be called at the start of the program.
-func Initialize(opts ...Option) (func(), error) {
+func Initialize(ctx context.Context, opts ...Option) (func(), error) {
 	config := newConfigWithDefaults(opts...)
 
 	if config.APIToken == "" {
@@ -85,7 +85,7 @@ func Initialize(opts ...Option) (func(), error) {
 	}
 
 	exporter, err := otlptracehttp.New(
-		context.Background(),
+		ctx,
 		otlptracehttp.WithEndpointURL(config.Endpoint+"/traces"),
 		otlptracehttp.WithHeaders(headers),
 	)
@@ -94,7 +94,7 @@ func Initialize(opts ...Option) (func(), error) {
 	}
 
 	resources, err := resource.New(
-		context.Background(),
+		ctx,
 		resource.WithAttributes(
 			semconv.ServiceNameKey.String(config.ServiceName),
 			semconv.ServiceVersionKey.String(serviceVersion),
@@ -116,7 +116,7 @@ func Initialize(opts ...Option) (func(), error) {
 	}
 
 	return func() {
-		if err := provider.Shutdown(context.Background()); err != nil {
+		if err := provider.Shutdown(ctx); err != nil {
 			log.Printf("Error shutting down tracer provider: %v", err)
 		}
 	}, nil

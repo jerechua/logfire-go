@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	closer, err := logfire.Initialize(logfire.WithServiceName("test-my-service"))
+	closer, err := logfire.Initialize(context.Background(), logfire.WithServiceName("test-my-service"))
 	if err != nil {
 		log.Fatalf("Failed to initialize logfire: %v", err)
 	}
