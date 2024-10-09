@@ -28,7 +28,10 @@ func main() {
 
 	outerLogger := logfire.NewSpanLogger(context.Background(), "span wrapper")
 	defer outerLogger.Close()
-
 	outerLogger.Info("something inside the span")
+
+	innerLogger := logfire.NewSpanLogger(outerLogger.Context(), "inner span")
+	defer innerLogger.Close()
+	innerLogger.Fatal("something fatal inside!")
 
 }

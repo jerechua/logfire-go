@@ -160,9 +160,8 @@ func Fatal(msg string) {
 }
 
 type SpanLogger struct {
-	parentCtx context.Context
-	spanCtx   context.Context
-	span      oteltrace.Span
+	spanCtx context.Context
+	span    oteltrace.Span
 }
 
 func (s *SpanLogger) Trace(msg string) {
@@ -189,6 +188,10 @@ func (s *SpanLogger) Fatal(msg string) {
 	sendLog(s.spanCtx, msg, otellog.SeverityFatal)
 }
 
+func (s *SpanLogger) Context() context.Context {
+	return s.spanCtx
+}
+
 func (s *SpanLogger) Close() {
 	s.span.End()
 }
@@ -196,9 +199,7 @@ func (s *SpanLogger) Close() {
 func NewSpanLogger(ctx context.Context, spanName string) *SpanLogger {
 	spanCtx, span := globalTracer.Start(ctx, spanName)
 	return &SpanLogger{
-		parentCtx: ctx,
-		spanCtx:   spanCtx,
-		span:      span,
+		spanCtx: spanCtx,
+		span:    span,
 	}
-
 }
