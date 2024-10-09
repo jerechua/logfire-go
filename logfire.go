@@ -25,8 +25,13 @@ const (
 	logfireTracerName      = "logfire"
 )
 
-// Config is the config that is required to initialize the logfire logger.
-type Config struct {
+var (
+	globalTracer      oteltrace.Tracer
+	globalServiceName string
+)
+
+// config is the config that is required to initialize the logfire logger.
+type config struct {
 	// ServiceName refers to the service this logger is for.
 	ServiceName string
 	// APIToken is the Write API token for logfire.
@@ -36,32 +41,32 @@ type Config struct {
 }
 
 // Option is a function type that modifies Config
-type Option func(*Config)
+type Option func(*config)
 
 // WithServiceName sets the service name in the Config
 func WithServiceName(name string) Option {
-	return func(c *Config) {
+	return func(c *config) {
 		c.ServiceName = name
 	}
 }
 
 // WithEndpoint sets the endpoint in the Config
 func WithEndpoint(endpoint string) Option {
-	return func(c *Config) {
+	return func(c *config) {
 		c.Endpoint = endpoint
 	}
 }
 
 // WithAPIToken sets the API token in the Config
 func WithAPIToken(token string) Option {
-	return func(c *Config) {
+	return func(c *config) {
 		c.APIToken = token
 	}
 }
 
 // newConfigWithDefaults creates a new Config with default values and applies the given options
-func newConfigWithDefaults(options ...Option) *Config {
-	config := &Config{
+func newConfigWithDefaults(options ...Option) *config {
+	config := &config{
 		APIToken: os.Getenv("LOGFIRE_TOKEN"),
 		Endpoint: defaultLogfireEndpoint,
 	}
@@ -73,9 +78,16 @@ func newConfigWithDefaults(options ...Option) *Config {
 	return config
 }
 
+// Returns the logfire service name.
+func ServiceName() string {
+	return globalServiceName
+}
+
 // Initialize initializes the logfire logger.  This must be called at the start of the program.
 func Initialize(ctx context.Context, opts ...Option) (func(), error) {
 	config := newConfigWithDefaults(opts...)
+
+	globalServiceName = config.ServiceName
 
 	if config.APIToken == "" {
 		return nil, errors.New("config.APIToken is required")
@@ -135,7 +147,12 @@ func sendLog(ctx context.Context, msg string, severity otellog.Severity) {
 	)
 }
 
-var globalTracer oteltrace.Tracer
+func Tracer() oteltrace.Tracer {
+	if globalTracer == nil {
+		panic("did you forget to call Initialize()?")
+	}
+	return globalTracer
+}
 
 func Trace(msg string) {
 	sendLog(context.Background(), msg, otellog.SeverityTrace)
@@ -198,10 +215,22 @@ func (s *SpanLogger) Close() {
 	s.span.End()
 }
 
+// NewSpanLogger creates a new child SpanLogger from the given context.
+// Use this if you want to create or "nest" a new Span.
 func NewSpanLogger(ctx context.Context, spanName string) *SpanLogger {
 	spanCtx, span := globalTracer.Start(ctx, spanName)
 	return &SpanLogger{
 		spanCtx: spanCtx,
+		span:    span,
+	}
+}
+
+// FromContext creates a new SpanLogger from the given context.
+// Use this if you want to use the same Span as the context you're in.
+func FromContext(ctx context.Context) *SpanLogger {
+	span := oteltrace.SpanFromContext(ctx)
+	return &SpanLogger{
+		spanCtx: ctx,
 		span:    span,
 	}
 }
