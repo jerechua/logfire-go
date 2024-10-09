@@ -112,7 +112,6 @@ func Initialize(ctx context.Context, opts ...Option) (func(), error) {
 	otel.SetTracerProvider(provider)
 
 	globalTracer = otel.Tracer(logfireTracerName)
-	logfireSpanLogger = NewSpanLogger(ctx, "logfire")
 
 	return func() {
 		if err := provider.Shutdown(ctx); err != nil {
