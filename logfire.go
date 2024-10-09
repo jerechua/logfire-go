@@ -112,6 +112,7 @@ func Initialize(ctx context.Context, opts ...Option) (func(), error) {
 	otel.SetTracerProvider(provider)
 
 	globalTracer = otel.Tracer(logfireTracerName)
+	logfireSpanLogger = NewSpanLogger(ctx, "logfire")
 
 	return func() {
 		if err := provider.Shutdown(ctx); err != nil {
@@ -120,8 +121,8 @@ func Initialize(ctx context.Context, opts ...Option) (func(), error) {
 	}, nil
 }
 
-func Log(ctx context.Context, spanName, msg string, severity otellog.Severity) {
-	_, span := globalTracer.Start(ctx, spanName)
+func sendLog(ctx context.Context, msg string, severity otellog.Severity) {
+	_, span := globalTracer.Start(ctx, msg)
 	defer span.End()
 
 	// Add some attributes to the span
@@ -136,27 +137,27 @@ func Log(ctx context.Context, spanName, msg string, severity otellog.Severity) {
 var globalTracer oteltrace.Tracer
 
 func Trace(msg string) {
-	Log(context.Background(), "logger", msg, otellog.SeverityTrace)
+	sendLog(context.Background(), msg, otellog.SeverityTrace)
 }
 
 func Debug(msg string) {
-	Log(context.Background(), "logger", msg, otellog.SeverityDebug)
+	sendLog(context.Background(), msg, otellog.SeverityDebug)
 }
 
 func Info(msg string) {
-	Log(context.Background(), "logger", msg, otellog.SeverityInfo)
+	sendLog(context.Background(), msg, otellog.SeverityInfo)
 }
 
 func Warn(msg string) {
-	Log(context.Background(), "logger", msg, otellog.SeverityWarn)
+	sendLog(context.Background(), msg, otellog.SeverityWarn)
 }
 
 func Error(msg string) {
-	Log(context.Background(), "logger", msg, otellog.SeverityError)
+	sendLog(context.Background(), msg, otellog.SeverityError)
 }
 
 func Fatal(msg string) {
-	Log(context.Background(), "logger", msg, otellog.SeverityFatal)
+	sendLog(context.Background(), msg, otellog.SeverityFatal)
 }
 
 type SpanLogger struct {
@@ -166,27 +167,27 @@ type SpanLogger struct {
 }
 
 func (s *SpanLogger) Trace(msg string) {
-	Log(s.spanCtx, "logger", msg, otellog.SeverityTrace)
+	sendLog(s.spanCtx, msg, otellog.SeverityTrace)
 }
 
 func (s *SpanLogger) Debug(msg string) {
-	Log(s.spanCtx, "logger", msg, otellog.SeverityDebug)
+	sendLog(s.spanCtx, msg, otellog.SeverityDebug)
 }
 
 func (s *SpanLogger) Info(msg string) {
-	Log(s.spanCtx, "logger", msg, otellog.SeverityInfo)
+	sendLog(s.spanCtx, msg, otellog.SeverityInfo)
 }
 
 func (s *SpanLogger) Warn(msg string) {
-	Log(s.spanCtx, "logger", msg, otellog.SeverityWarn)
+	sendLog(s.spanCtx, msg, otellog.SeverityWarn)
 }
 
 func (s *SpanLogger) Error(msg string) {
-	Log(s.spanCtx, "logger", msg, otellog.SeverityError)
+	sendLog(s.spanCtx, msg, otellog.SeverityError)
 }
 
 func (s *SpanLogger) Fatal(msg string) {
-	Log(s.spanCtx, "logger", msg, otellog.SeverityFatal)
+	sendLog(s.spanCtx, msg, otellog.SeverityFatal)
 }
 
 func (s *SpanLogger) Close() {

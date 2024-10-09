@@ -26,8 +26,9 @@ func main() {
 	// time.Sleep(time.Second * 5)
 	// defer outerSpanCloser()
 
-	logger := logfire.NewSpanLogger(context.Background(), "span wrapper")
-	defer logger.Close()
-	logger.Info("something inside the span")
+	outerLogger := logfire.NewSpanLogger(context.Background(), "span wrapper")
+	defer outerLogger.Close()
+
+	outerLogger.Info("something inside the span")
 
 }
