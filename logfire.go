@@ -11,16 +11,17 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
-	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/sdk/trace"
+
+	otellog "go.opentelemetry.io/otel/log"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
 const (
-	serviceVersion         = "1.0.0"
-	defaultLogfireEndpoint = "https://logfire-api.pydantic.dev/v1" // Default OTLP HTTP endpoint
+	serviceVersion         = "0.0.1"
+	defaultLogfireEndpoint = "https://logfire-api.pydantic.dev/v1"
 	logfireTracerName      = "logfire"
 )
 
@@ -104,9 +105,10 @@ func Initialize(ctx context.Context, opts ...Option) (func(), error) {
 		log.Fatalf("Failed to create resource: %v", err)
 	}
 
-	provider := trace.NewTracerProvider(
-		trace.WithBatcher(exporter, trace.WithBatchTimeout(1*time.Second)),
-		trace.WithResource(resources),
+	provider := sdktrace.NewTracerProvider(
+		// TODO: This doesn't seem to send live log events?
+		sdktrace.WithBatcher(exporter, sdktrace.WithBatchTimeout(1*time.Second)),
+		sdktrace.WithResource(resources),
 	)
 
 	otel.SetTracerProvider(provider)

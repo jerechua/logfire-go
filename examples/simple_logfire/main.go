@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"time"
 
 	logfire "github.com/jerechua/logfire-go"
 )
@@ -21,17 +22,14 @@ func main() {
 	logfire.Error("This is an error log!")
 	logfire.Fatal("This is a fatal log!")
 
-	// ctx, outerSpanCloser := logfire.NewSpan(context.Background(), "span wrapper")
-	// logfire.InfoCtx(ctx, "something inside the span")
-	// time.Sleep(time.Second * 5)
-	// defer outerSpanCloser()
-
 	outerLogger := logfire.NewSpanLogger(context.Background(), "span wrapper")
 	defer outerLogger.Close()
 	outerLogger.Info("something inside the span")
+	time.Sleep(100 * time.Millisecond)
 
 	innerLogger := logfire.NewSpanLogger(outerLogger.Context(), "inner span")
 	defer innerLogger.Close()
 	innerLogger.Fatal("something fatal inside!")
+	time.Sleep(200 * time.Millisecond)
 
 }
