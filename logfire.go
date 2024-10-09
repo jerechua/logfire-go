@@ -111,9 +111,7 @@ func Initialize(ctx context.Context, opts ...Option) (func(), error) {
 
 	otel.SetTracerProvider(provider)
 
-	globalLogger = &logger{
-		tracer: otel.Tracer(logfireTracerName),
-	}
+	globalTracer = otel.Tracer(logfireTracerName)
 
 	return func() {
 		if err := provider.Shutdown(ctx); err != nil {
@@ -122,12 +120,8 @@ func Initialize(ctx context.Context, opts ...Option) (func(), error) {
 	}, nil
 }
 
-type logger struct {
-	tracer oteltrace.Tracer
-}
-
-func (l *logger) Log(ctx context.Context, spanName, msg string, severity otellog.Severity) {
-	_, span := l.tracer.Start(ctx, spanName)
+func Log(ctx context.Context, spanName, msg string, severity otellog.Severity) {
+	_, span := globalTracer.Start(ctx, spanName)
 	defer span.End()
 
 	// Add some attributes to the span
@@ -139,30 +133,30 @@ func (l *logger) Log(ctx context.Context, spanName, msg string, severity otellog
 	)
 }
 
-var globalLogger *logger
+var globalTracer oteltrace.Tracer
 
 func Trace(msg string) {
-	globalLogger.Log(context.Background(), "logger", msg, otellog.SeverityTrace)
+	Log(context.Background(), "logger", msg, otellog.SeverityTrace)
 }
 
 func Debug(msg string) {
-	globalLogger.Log(context.Background(), "logger", msg, otellog.SeverityDebug)
+	Log(context.Background(), "logger", msg, otellog.SeverityDebug)
 }
 
 func Info(msg string) {
-	globalLogger.Log(context.Background(), "logger", msg, otellog.SeverityInfo)
+	Log(context.Background(), "logger", msg, otellog.SeverityInfo)
 }
 
 func Warn(msg string) {
-	globalLogger.Log(context.Background(), "logger", msg, otellog.SeverityWarn)
+	Log(context.Background(), "logger", msg, otellog.SeverityWarn)
 }
 
 func Error(msg string) {
-	globalLogger.Log(context.Background(), "logger", msg, otellog.SeverityError)
+	Log(context.Background(), "logger", msg, otellog.SeverityError)
 }
 
 func Fatal(msg string) {
-	globalLogger.Log(context.Background(), "logger", msg, otellog.SeverityFatal)
+	Log(context.Background(), "logger", msg, otellog.SeverityFatal)
 }
 
 type SpanLogger struct {
@@ -172,27 +166,27 @@ type SpanLogger struct {
 }
 
 func (s *SpanLogger) Trace(msg string) {
-	globalLogger.Log(s.spanCtx, "logger", msg, otellog.SeverityTrace)
+	Log(s.spanCtx, "logger", msg, otellog.SeverityTrace)
 }
 
 func (s *SpanLogger) Debug(msg string) {
-	globalLogger.Log(s.spanCtx, "logger", msg, otellog.SeverityDebug)
+	Log(s.spanCtx, "logger", msg, otellog.SeverityDebug)
 }
 
 func (s *SpanLogger) Info(msg string) {
-	globalLogger.Log(s.spanCtx, "logger", msg, otellog.SeverityInfo)
+	Log(s.spanCtx, "logger", msg, otellog.SeverityInfo)
 }
 
 func (s *SpanLogger) Warn(msg string) {
-	globalLogger.Log(s.spanCtx, "logger", msg, otellog.SeverityWarn)
+	Log(s.spanCtx, "logger", msg, otellog.SeverityWarn)
 }
 
 func (s *SpanLogger) Error(msg string) {
-	globalLogger.Log(s.spanCtx, "logger", msg, otellog.SeverityError)
+	Log(s.spanCtx, "logger", msg, otellog.SeverityError)
 }
 
 func (s *SpanLogger) Fatal(msg string) {
-	globalLogger.Log(s.spanCtx, "logger", msg, otellog.SeverityFatal)
+	Log(s.spanCtx, "logger", msg, otellog.SeverityFatal)
 }
 
 func (s *SpanLogger) Close() {
@@ -200,7 +194,7 @@ func (s *SpanLogger) Close() {
 }
 
 func NewSpanLogger(ctx context.Context, spanName string) *SpanLogger {
-	spanCtx, span := globalLogger.tracer.Start(ctx, spanName)
+	spanCtx, span := globalTracer.Start(ctx, spanName)
 	return &SpanLogger{
 		parentCtx: ctx,
 		spanCtx:   spanCtx,
