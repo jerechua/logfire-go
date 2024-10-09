@@ -15,10 +15,10 @@ In the simplest case, you need to initialize the logfire.
 
 ```go
 closer, err := logfire.Initialize(context.Background(), logfire.WithServiceName("test-my-service"))
-	if err != nil {
-		log.Fatalf("Failed to initialize logfire: %v", err)
-	}
-	defer closer()
+if err != nil {
+    log.Fatalf("Failed to initialize logfire: %v", err)
+}
+defer closer()
 ```
 
 Then you can use the logger as you would with any other logger.
