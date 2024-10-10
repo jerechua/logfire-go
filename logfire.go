@@ -1,6 +1,6 @@
 // Package logfire uses OpenTelemetry to send logs to the Logfire API.
 //
-// See https://pydantic.dev/ to learn more.
+// This package is not affiliated with Pydantic. See https://pydantic.dev/ to learn more.
 package logfire
 
 import (
