@@ -1,3 +1,6 @@
+// Package logfire uses OpenTelemetry to send logs to the Logfire API.
+//
+// See https://pydantic.dev/ to learn more.
 package logfire
 
 import (
@@ -41,31 +44,31 @@ type config struct {
 	Endpoint string
 }
 
-// Option is a function type that modifies Config
+// Option is a function type that modifies Config.
 type Option func(*config)
 
-// WithServiceName sets the service name in the Config
+// WithServiceName sets the service name in the Config.
 func WithServiceName(name string) Option {
 	return func(c *config) {
 		c.ServiceName = name
 	}
 }
 
-// WithEndpoint sets the endpoint in the Config
+// WithEndpoint sets the endpoint in the Config.
 func WithEndpoint(endpoint string) Option {
 	return func(c *config) {
 		c.Endpoint = endpoint
 	}
 }
 
-// WithAPIToken sets the API token in the Config
+// WithAPIToken sets the API token in the Config.
 func WithAPIToken(token string) Option {
 	return func(c *config) {
 		c.APIToken = token
 	}
 }
 
-// newConfigWithDefaults creates a new Config with default values and applies the given options
+// newConfigWithDefaults creates a new Config with default values and applies the given options.
 func newConfigWithDefaults(options ...Option) *config {
 	config := &config{
 		APIToken: os.Getenv("LOGFIRE_TOKEN"),
@@ -154,6 +157,9 @@ func sendLog(ctx context.Context, msg string, severity otellog.Severity) {
 	)
 }
 
+// Tracer returns an OpenTelemetry Tracer that can be used to hook into other
+// OpenTelemetry integrations.  Integrations using this tracer will send logs directly
+// to Logfire.
 func Tracer() oteltrace.Tracer {
 	if globalTracer == nil {
 		panic("did you forget to call Initialize()?")
@@ -161,63 +167,79 @@ func Tracer() oteltrace.Tracer {
 	return globalTracer
 }
 
+// Trace logs a message to Logfire with severity Trace.
 func Trace(msg string) {
 	globalLogger.Trace(msg)
 }
 
+// Debug logs a message to Logfire with severity Debug.
 func Debug(msg string) {
 	globalLogger.Debug(msg)
 }
 
+// Info logs a message to Logfire with severity Info.
 func Info(msg string) {
 	globalLogger.Info(msg)
 }
 
+// Warn logs a message to Logfire with severity Warn.
 func Warn(msg string) {
 	globalLogger.Warn(msg)
 }
 
+// Error logs a message to Logfire with severity Error.
 func Error(msg string) {
 	globalLogger.Error(msg)
 }
 
+// Fatal logs a message to Logfire with severity Fatal.
 func Fatal(msg string) {
 	globalLogger.Fatal(msg)
 }
 
+// SpanLogger creates a span for the current context.  The SpanLogger is also aware of
+// the context in which the span was created, and can be used to create child spans.
 type SpanLogger struct {
 	spanCtx context.Context
 	span    oteltrace.Span
 }
 
+// Trace logs a message in the current span context to Logfire with severity Trace.
 func (s *SpanLogger) Trace(msg string) {
 	sendLog(s.spanCtx, msg, otellog.SeverityTrace)
 }
 
+// Debug logs a message in the current span context to Logfire with severity Debug.
 func (s *SpanLogger) Debug(msg string) {
 	sendLog(s.spanCtx, msg, otellog.SeverityDebug)
 }
 
+// Info logs a message in the current span context to Logfire with severity Info.
 func (s *SpanLogger) Info(msg string) {
 	sendLog(s.spanCtx, msg, otellog.SeverityInfo)
 }
 
+// Warn logs a message in the current span context to Logfire with severity Warn.
 func (s *SpanLogger) Warn(msg string) {
 	sendLog(s.spanCtx, msg, otellog.SeverityWarn)
 }
 
+// Error logs a message in the current span context to Logfire with severity Error.
 func (s *SpanLogger) Error(msg string) {
 	sendLog(s.spanCtx, msg, otellog.SeverityError)
 }
 
+// Fatal logs a message in the current span context to Logfire with severity Fatal.
 func (s *SpanLogger) Fatal(msg string) {
 	sendLog(s.spanCtx, msg, otellog.SeverityFatal)
 }
 
+// Context returns the context of the current span.
 func (s *SpanLogger) Context() context.Context {
 	return s.spanCtx
 }
 
+// Close ends the current span.
 func (s *SpanLogger) Close() {
 	s.span.End()
 }
