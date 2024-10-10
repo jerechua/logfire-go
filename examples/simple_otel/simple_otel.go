@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -13,13 +12,12 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
-	"go.opentelemetry.io/otel/trace"
 )
 
 const (
 	serviceName    = "my-service"
 	serviceVersion = "1.0.0"
-	endpoint       = "https://logfire-api.pydantic.dev/v1" // Default OTLP HTTP endpoint
+	endpoint       = "https://logfire-api.pydantic.dev/v1"
 )
 
 var headers = map[string]string{
@@ -82,12 +80,6 @@ func main() {
 		attribute.String("logfire.msg", "log message sent from Go!"),
 		attribute.Int("logfire.level_num", 13),
 	)
-
-	// Simulate some work
-	time.Sleep(time.Millisecond * 100)
-
-	// Log a message
-	span.AddEvent("log", trace.WithAttributes(attribute.String("message", "This is a log message sent to Logfire via OpenTelemetry")))
 
 	fmt.Println("Trace sent to Logfire via OpenTelemetry")
 }
